@@ -1,6 +1,9 @@
 <template>
+  <Loading v-show="isLoading" />
+
   <fieldset
     class="fieldset bg-base-300 border-base-300 rounded-box w-xs border p-4 mx-auto mt-20 shadow-md"
+    v-show="!isLoading"
   >
     <legend class="fieldset-legend">Login</legend>
 
@@ -38,19 +41,34 @@
 <script setup>
 import { ref } from "vue";
 
+import Loading from "@/ui/loading.vue";
+import { useToast } from "vue-toastification";
+
 import { signIn } from "@/services/apiAuth";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
 
+const toast = useToast();
+
 const email = ref("");
 const password = ref("");
 
+const isLoading = ref(false);
 async function onClick() {
+  isLoading.value = true;
+  toast.info("Logging in...");
+
   const data = await signIn(email.value, password.value);
 
   if (data) {
     router.push("/");
+    toast.clear();
+    toast.success("Logged in successfully!");
+  } else {
+    toast.clear();
+    toast.error("Login failed. Please check your credentials.");
+    isLoading.value = false;
   }
 }
 </script>

@@ -1,5 +1,4 @@
 import { supabase } from "@/utils/supabase.js";
-import avatar from "daisyui/components/avatar";
 
 export async function signUp(email, password, metaData = {}) {
   const { data, error } = await supabase.auth.signUp({

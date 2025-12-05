@@ -22,6 +22,7 @@
               (student) => student.student_id === scoreItem.student_id
             )
           "
+          v-if="students.length > 0"
         />
       </tbody>
     </table>
@@ -33,18 +34,38 @@ import { onMounted, ref, computed } from "vue";
 
 import Loading from "@/ui/loading.vue";
 
-import { getStudentList } from "@/services/apiStudent.js";
+import { getStudentById, getStudentList } from "@/services/apiStudent.js";
 import { getScoreList } from "@/services/apiScore.js";
 import ScoreListItem from "./ScoreListItem.vue";
-import { getConfig } from "@/utils/configHelper";
+import { getUserId } from "@/utils/userHelper";
+import { useUserStore } from "@/stores/user.js";
+import { storeToRefs } from "pinia";
 
 const scoreList = ref([]);
 const students = ref([]);
 
+const userStore = useUserStore();
+const { isStudent } = storeToRefs(userStore);
+const userId = getUserId();
+
 const filteredScores = computed(() => {
-  return scoreList.value.filter((score) =>
-    students.value.some((student) => student.student_id === score.student_id)
-  );
+  if (isStudent.value) {
+    return scoreList.value.filter(
+      (scoreItem) => scoreItem.student_id === userId
+    );
+  } else {
+    // 使用 some 代替 includes
+    // return scoreList.value.filter((scoreItem) =>
+    //   students.value.some(
+    //     (student) => student.student_id === scoreItem.student_id
+    //   )
+    // );
+    return scoreList.value.filter((scoreItem) =>
+      students.value
+        .map((student) => student.student_id)
+        .includes(scoreItem.student_id)
+    );
+  }
 });
 
 const isLoading = ref(true);
@@ -54,11 +75,12 @@ onMounted(async () => {
 
   scoreList.value = await getScoreList();
 
-  const token = getConfig("SUPABASE_TOKEN");
-  const userToken = JSON.parse(localStorage.getItem(token));
-  const teacherId = userToken.user.id;
-
-  students.value = await getStudentList(teacherId);
+  if (!isStudent.value) {
+    students.value = await getStudentList(userId);
+  } else {
+    const student = await getStudentById(userId);
+    students.value = [student];
+  }
 
   isLoading.value = false;
 });

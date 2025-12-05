@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
-import { isAuthenticated } from "@/hook/useAuth";
+import { isAuthenticated } from "@/utils/AuthHelper";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),

@@ -1,4 +1,4 @@
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { defineStore } from "pinia";
 
 export const useUserStore = defineStore("user", () => {
@@ -6,9 +6,13 @@ export const useUserStore = defineStore("user", () => {
     avatar: "https://img.daisyui.com/images/profile/demo/yellingcat@192.webp",
   });
 
+  const isStudent = computed(() => {
+    return user.value.isStudent ? true : false;
+  });
+
   function updateUser(newUserMetaData = {}) {
     user.value = newUserMetaData;
   }
 
-  return { user, updateUser };
+  return { user, updateUser, isStudent };
 });

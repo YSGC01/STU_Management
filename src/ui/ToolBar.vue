@@ -61,7 +61,7 @@
 
     <!-- 按钮 -->
     <div class="col-span-1 text-center">
-      <button class="btn btn-neutral" @click="onClick">
+      <button class="btn btn-neutral" @click="onClick" v-if="!isStudent">
         {{ route.name === "score" ? "Upload Score" : "Add Student" }}
       </button>
     </div>
@@ -70,6 +70,11 @@
 
 <script setup>
 import { useRoute, useRouter } from "vue-router";
+import { useUserStore } from "@/stores/user";
+import { storeToRefs } from "pinia";
+
+const userStore = useUserStore();
+const { isStudent } = storeToRefs(userStore);
 
 const route = useRoute();
 const router = useRouter();

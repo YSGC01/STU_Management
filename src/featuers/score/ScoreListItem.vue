@@ -7,7 +7,7 @@
     <td>{{ scoreItem.subject }}</td>
     <td>{{ scoreItem.semesterSeason }} {{ scoreItem.semesterYear }}</td>
     <td>{{ scoreItem.score }}</td>
-    <th>
+    <th v-if="!isStudent">
       <button
         class="btn btn-ghost btn-sm"
         @click="
@@ -23,6 +23,11 @@
 
 <script setup>
 import { useRouter } from "vue-router";
+import { useUserStore } from "@/stores/user";
+import { storeToRefs } from "pinia";
+
+const userStore = useUserStore();
+const { isStudent } = storeToRefs(userStore);
 
 const router = useRouter();
 

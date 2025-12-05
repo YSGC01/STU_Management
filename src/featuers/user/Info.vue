@@ -83,10 +83,11 @@ import { uploadAvatar } from "@/services/apiStorage";
 import { getTeacherByTeacherId } from "@/services/apiTeacher";
 import { getConfig } from "@/utils/configHelper";
 import { updateUser as updateUserApi } from "@/services/apiAuth";
+import { updateStudent } from "@/services/apiStudent";
 
 const userStore = useUserStore();
 const { updateUser } = userStore;
-const { user } = storeToRefs(userStore);
+const { user, isStudent } = storeToRefs(userStore);
 const toast = useToast();
 
 const currentAvatarUrl = ref(user.value.avatar);
@@ -103,7 +104,6 @@ function handleAvatarChange(event) {
 
 async function onClick() {
   if (!avatarFile.value) {
-    // TODO: Warning Toast
     toast.error("Please select an avatar image before updating.");
     return;
   }
@@ -118,10 +118,18 @@ async function onClick() {
   // 上传头像文件（到avatar存储桶）
   await uploadAvatar(avatarFile.value, newAvatarFileName);
 
+  const newAvatar = `${supabaseURL}/storage/v1/object/public/avatar/${newAvatarFileName}`;
   // 更新supabase中的用户资料（avatar字段）
   const updateUserData = await updateUserApi({
-    avatar: `${supabaseURL}/storage/v1/object/public/avatar/${newAvatarFileName}`,
+    avatar: newAvatar,
   });
+
+  if (isStudent.value) {
+    const students = await updateStudent(user.value.sub, {
+      avatar: newAvatar,
+    });
+    console.log(students);
+  }
 
   // 更新pinia中的用户资料
   updateUser(updateUserData.user.user_metadata);
@@ -137,8 +145,11 @@ onMounted(async () => {
   isLoading.value = true;
 
   currentAvatarUrl.value = user.value.avatar;
-  const teacher = await getTeacherByTeacherId(user.value.sub);
-  classInChargeArr.value = JSON.parse(teacher[0].class_in_charge);
+
+  if (!isStudent.value) {
+    const teacher = await getTeacherByTeacherId(user.value.sub);
+    classInChargeArr.value = JSON.parse(teacher[0].class_in_charge);
+  }
 
   isLoading.value = false;
 });

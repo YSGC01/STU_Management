@@ -44,7 +44,7 @@
 
     <!-- desktop '桌面端导航' -->
     <div class="navbar-center hidden lg:flex">
-      <ul class="menu menu-horizontal px-1">
+      <ul class="menu menu-horizontal px-1" v-if="!isStudent">
         <li>
           <a
             :class="route.name === 'score' ? 'menu-active' : ''"
@@ -85,19 +85,19 @@
 <script setup>
 import { onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { storeToRefs } from "pinia";
 
 import { signOut } from "@/services/apiAuth";
 import { getConfig } from "@/utils/configHelper";
 import { useUserStore } from "@/stores/user";
-import { storeToRefs } from "pinia";
 
 const router = useRouter();
 const route = useRoute();
 
 const userStore = useUserStore();
 const { updateUser } = userStore;
-const { user } = storeToRefs(userStore);
-console.log(user);
+const { user, isStudent } = storeToRefs(userStore);
+// console.log(user);
 
 function onClick() {
   signOut();
