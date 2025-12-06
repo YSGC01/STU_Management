@@ -14,7 +14,7 @@
       </thead>
       <tbody>
         <ScoreListItem
-          v-for="scoreItem in filteredBySearchScores"
+          v-for="scoreItem in paginatedScores"
           :key="scoreItem.id"
           :scoreItem
           :currentStudent="
@@ -27,24 +27,30 @@
       </tbody>
     </table>
   </div>
+  <Pagination v-show="!isLoading" :currentPage :pageCount />
 </template>
 
 <script setup>
-import { onMounted, ref, computed } from "vue";
-
-import Loading from "@/ui/loading.vue";
+import { onMounted, ref, computed, watch } from "vue";
 import { useUserStore } from "@/stores/user.js";
 import { useSearchStore } from "@/stores/search.js";
 import { storeToRefs } from "pinia";
+import { useRouter, useRoute } from "vue-router";
 
 import ScoreListItem from "./ScoreListItem.vue";
+import Loading from "@/ui/loading.vue";
+import Pagination from "@/ui/Pagination.vue";
 
 import { getStudentById, getStudentList } from "@/services/apiStudent.js";
 import { getScoreList } from "@/services/apiScore.js";
 import { getUserId } from "@/utils/userHelper";
+import { getConfig } from "@/utils/configHelper";
 
 const scoreList = ref([]);
 const students = ref([]);
+
+const route = useRoute();
+const router = useRouter();
 
 const searchStore = useSearchStore();
 const { scoreSearchCondition } = storeToRefs(searchStore);
@@ -95,9 +101,42 @@ const filteredBySearchScores = computed(() => {
   }
 });
 
+const currentPage = ref(1);
+const pageSize = getConfig("PAGE_SIZE");
+const pageCount = computed(() => {
+  return Math.ceil(filteredBySearchScores.value.length / pageSize);
+});
+
+const paginatedScores = computed(() => {
+  const startIdx = (currentPage.value - 1) * pageSize;
+  return filteredBySearchScores.value.slice(startIdx, startIdx + pageSize);
+});
+
+watch(
+  () => currentPage.value,
+  (newPage) => {
+    router.push({ query: { page: newPage } });
+  }
+);
+
+watch(
+  () => route.query.page,
+  (newPage) => {
+    const pageNumber = parseInt(newPage) || 1;
+    if (pageNumber >= 1 && pageNumber <= pageCount.value) {
+      currentPage.value = pageNumber;
+    } else {
+      currentPage.value = 1;
+    }
+  },
+  { immediate: true }
+);
+
 const isLoading = ref(true);
 
 onMounted(async () => {
+  router.push({ query: { page: currentPage.value } });
+
   isLoading.value = true;
 
   scoreList.value = await getScoreList();

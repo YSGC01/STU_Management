@@ -62,9 +62,10 @@
       </ul>
     </div>
 
-    <!-- avatar '头像' -->
+    <!-- 头像和主题切换 -->
     <div class="navbar-end">
-      <div class="dropdown dropdown-end">
+      <ToggleTheme class="mr-4" />
+      <div class="dropdown dropdown-end mr-4">
         <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
           <div class="w-10 rounded-full">
             <img alt="Tailwind CSS Navbar component" :src="user.avatar" />
@@ -87,6 +88,8 @@ import { onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useUserStore } from "@/stores/user";
 import { storeToRefs } from "pinia";
+
+import ToggleTheme from "@/ui/ToggleTheme.vue";
 
 import { signOut } from "@/services/apiAuth";
 import { getConfig } from "@/utils/configHelper";

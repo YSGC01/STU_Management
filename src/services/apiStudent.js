@@ -15,6 +15,39 @@ export async function getStudentList(teacherId) {
   return student;
 }
 
+export async function getPaginatedStudentList(
+  teacherId,
+  currentPage,
+  pageSize
+) {
+  const { data: student, error } = await supabase
+    .from("student")
+    .select("*")
+    .eq("teacher_id", teacherId)
+    .range((currentPage - 1) * pageSize, currentPage * pageSize - 1);
+
+  if (error) {
+    console.error("Error fetching student data:", error);
+    return;
+  }
+
+  return student;
+}
+
+export async function getStudentCount(teacherId) {
+  const { count, error } = await supabase
+    .from("student")
+    .select("*", { count: "exact", head: true })
+    .eq("teacher_id", teacherId);
+
+  if (error) {
+    console.error("Error fetching student data:", error);
+    return;
+  }
+
+  return count;
+}
+
 export async function addStudent(studentData) {
   const { data, error } = await supabase
     .from("student")

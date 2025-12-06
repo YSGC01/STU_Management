@@ -19,27 +19,36 @@
       <tbody>
         <!-- 列表项 -->
         <StudentListItem
-          v-for="studentItem in filteredStudents"
+          v-for="studentItem in paginatedStudents"
           :key="studentItem.id"
           :studentItem
         />
       </tbody>
     </table>
   </div>
+  <Pagination v-show="!isLoading" :currentPage :pageCount />
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { useSearchStore } from "@/stores/search";
+import { useRouter, useRoute } from "vue-router";
 
 import StudentListItem from "./StudentListItem.vue";
-
-import { getStudentList } from "@/services/apiStudent";
-import { getConfig } from "@/utils/configHelper";
 import Loading from "@/ui/loading.vue";
+import Pagination from "@/ui/Pagination.vue";
+
+import {
+  getPaginatedStudentList,
+  getStudentCount,
+} from "@/services/apiStudent";
+import { getUserId } from "@/utils/userHelper";
 
 const studentList = ref([]);
+
+const route = useRoute();
+const router = useRouter();
 
 const searchStore = useSearchStore();
 const { studentSearchCondition } = storeToRefs(searchStore);
@@ -67,18 +76,60 @@ const filteredStudents = computed(() => {
   }
 });
 
+const currentPage = ref(1);
+const pageSize = 3; // 暂定为3，后续再加点数据
+const studentCount = ref(0);
+const pageCount = computed(() => {
+  return Math.ceil(studentCount.value / pageSize);
+});
+
+const paginatedStudents = computed(() => {
+  return filteredStudents.value;
+});
+
 const isLoading = ref(true);
 
-onMounted(async () => {
+async function fetchData() {
   isLoading.value = true;
 
-  const token = getConfig("SUPABASE_TOKEN");
-  const userToken = JSON.parse(localStorage.getItem(token));
-  const teacherId = userToken.user.id;
+  const teacherId = getUserId();
 
-  studentList.value = await getStudentList(teacherId);
+  studentList.value = await getPaginatedStudentList(
+    teacherId,
+    currentPage.value,
+    pageSize
+  );
 
   isLoading.value = false;
+}
+
+watch(
+  () => currentPage.value,
+  (newPage) => {
+    fetchData();
+    router.push({ query: { page: newPage } });
+  }
+);
+
+watch(
+  () => route.query.page,
+  (newPage) => {
+    const pageNumber = parseInt(newPage) || 1;
+    if (pageNumber >= 1 && pageNumber <= pageCount.value) {
+      currentPage.value = pageNumber;
+    } else {
+      currentPage.value = 1;
+    }
+  },
+  { immediate: true }
+);
+
+onMounted(async () => {
+  const userId = getUserId();
+  router.push({ query: { page: currentPage.value } });
+
+  await fetchData();
+  studentCount.value = await getStudentCount(userId);
 });
 </script>
 

@@ -2,19 +2,19 @@
   <div class="my-4 grid grid-cols-4">
     <!-- 搜索标签 -->
     <section class="col-span-1">
-      <searchCondition
+      <SearchCondition
         v-if="isStudentList"
         v-for="(condition, idx) in studentSearchCondition"
         :key="idx"
         :onDelete="() => onDelete(idx)"
-        >{{ condition }}</searchCondition
+        >{{ condition }}</SearchCondition
       >
-      <searchCondition
+      <SearchCondition
         v-if="!isStudentList"
         v-for="(condition, idx) in scoreSearchCondition"
         :key="idx"
         :onDelete="() => onDelete(idx)"
-        >{{ condition }}</searchCondition
+        >{{ condition }}</SearchCondition
       >
     </section>
 
@@ -65,7 +65,7 @@ import { storeToRefs } from "pinia";
 
 import { useToast } from "vue-toastification";
 
-import searchCondition from "@/ui/searchCondition.vue";
+import SearchCondition from "@/ui/SearchCondition.vue";
 
 const searchStore = useSearchStore();
 const { isStudent } = storeToRefs(searchStore);
