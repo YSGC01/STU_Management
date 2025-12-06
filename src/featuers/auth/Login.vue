@@ -1,9 +1,6 @@
 <template>
-  <Loading v-show="isLoading" />
-
   <Form
     class="fieldset bg-base-300 border-base-300 rounded-box w-xs border p-4 mx-auto mt-20 shadow-md"
-    v-show="!isLoading"
     @submit="onSubmit"
     :validation-schema="validationSchema"
   >
@@ -61,6 +58,7 @@ import * as yup from "yup";
 
 import { signIn } from "@/services/apiAuth";
 import { useRouter } from "vue-router";
+import { useMutation } from "@tanstack/vue-query";
 
 const router = useRouter();
 const toast = useToast();
@@ -73,22 +71,22 @@ const validationSchema = yup.object({
   password: yup.string().required(),
 });
 
-const isLogging = ref(false);
-
-async function onSubmit() {
-  // 禁用按钮和输入
-  isLogging.value = true;
-
-  // 开始登录
-  const data = await signIn(email.value, password.value);
-
-  if (data) {
+// Mutation
+const { mutate: login, isPending: isLogging } = useMutation({
+  mutationFn: ({ email, password }) => signIn(email, password),
+  onSuccess: () => {
     router.push("/");
     toast.success("登录成功！");
-  } else {
+  },
+  onError: () => {
     isLogging.value = false;
     toast.error("登录失败。请检查您的邮箱和密码！");
-  }
+  },
+});
+
+function onSubmit() {
+  // 登录
+  login({ email: email.value, password: password.value });
 }
 </script>
 

@@ -16,6 +16,10 @@ const router = createRouter({
       //子路由
       children: [
         {
+          path: "",
+          redirect: "/home/score",
+        },
+        {
           path: "score",
           children: [
             {
@@ -72,20 +76,15 @@ const router = createRouter({
       name: "login",
       component: () => import("@/featuers/auth/Login.vue"),
     },
+    {
+      path: "/:pathMatch(.*)*",
+      name: "NotFound",
+      component: () => import("@/ui/NotFound.vue"),
+    },
   ],
 });
 
 router.beforeEach(async (to, from) => {
-  // if (
-  //   // make sure the user is authenticated
-  //   !isAuthenticated &&
-  //   // ❗️ Avoid an infinite redirect
-  //   to.name !== "Login"
-  // ) {
-  //   // redirect the user to the login page
-  //   return { name: "Login" };
-  // }
-
   const routeName = to.name;
   if (routeName !== "login" && routeName !== "signup") {
     // Check if the user is authenticated
