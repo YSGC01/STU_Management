@@ -85,14 +85,17 @@
 <script setup>
 import { onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { useUserStore } from "@/stores/user";
 import { storeToRefs } from "pinia";
 
 import { signOut } from "@/services/apiAuth";
 import { getConfig } from "@/utils/configHelper";
-import { useUserStore } from "@/stores/user";
+import { useToast } from "vue-toastification";
 
 const router = useRouter();
 const route = useRoute();
+
+const toast = useToast();
 
 const userStore = useUserStore();
 const { updateUser } = userStore;
@@ -102,6 +105,7 @@ const { user, isStudent } = storeToRefs(userStore);
 function onClick() {
   signOut();
   router.push({ name: "login" });
+  toast.success("已登出！");
 }
 
 onMounted(() => {

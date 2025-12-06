@@ -14,7 +14,7 @@
       </thead>
       <tbody>
         <ScoreListItem
-          v-for="scoreItem in filteredScores"
+          v-for="scoreItem in filteredBySearchScores"
           :key="scoreItem.id"
           :scoreItem
           :currentStudent="
@@ -33,17 +33,21 @@
 import { onMounted, ref, computed } from "vue";
 
 import Loading from "@/ui/loading.vue";
+import { useUserStore } from "@/stores/user.js";
+import { useSearchStore } from "@/stores/search.js";
+import { storeToRefs } from "pinia";
+
+import ScoreListItem from "./ScoreListItem.vue";
 
 import { getStudentById, getStudentList } from "@/services/apiStudent.js";
 import { getScoreList } from "@/services/apiScore.js";
-import ScoreListItem from "./ScoreListItem.vue";
 import { getUserId } from "@/utils/userHelper";
-import { useUserStore } from "@/stores/user.js";
-import { storeToRefs } from "pinia";
 
 const scoreList = ref([]);
 const students = ref([]);
 
+const searchStore = useSearchStore();
+const { scoreSearchCondition } = storeToRefs(searchStore);
 const userStore = useUserStore();
 const { isStudent } = storeToRefs(userStore);
 const userId = getUserId();
@@ -65,6 +69,29 @@ const filteredScores = computed(() => {
         .map((student) => student.student_id)
         .includes(scoreItem.student_id)
     );
+  }
+});
+
+const filteredBySearchScores = computed(() => {
+  if (scoreSearchCondition.value.length === 0) {
+    return filteredScores.value;
+  } else {
+    return filteredScores.value.filter((scoreItem) => {
+      const scoreInfoJSON = JSON.stringify([
+        scoreItem.subject,
+        scoreItem.semesterSeason,
+        scoreItem.semesterYear,
+        scoreItem.score,
+      ]);
+
+      for (const condition of scoreSearchCondition.value) {
+        if (!scoreInfoJSON.toLowerCase().includes(condition.toLowerCase())) {
+          return false;
+        }
+      }
+
+      return true;
+    });
   }
 });
 

@@ -2,48 +2,37 @@
   <div class="my-4 grid grid-cols-4">
     <!-- 搜索标签 -->
     <section class="col-span-1">
-      <div class="badge badge-neutral mx-1 mb-1">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          class="inline-block w-4 h-4 stroke-current cursor-pointer transition hover:rotate-180 hover:scale-140 duration-300 ease-in-out"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M6 18L18 6M6 6l12 12"
-          ></path>
-        </svg>
-        Neutral
-      </div>
-      <div class="badge badge-info mx-1 mb-1">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          class="inline-block w-4 h-4 stroke-current cursor-pointer transition hover:rotate-180 hover:scale-140 duration-300 ease-in-out"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M6 18L18 6M6 6l12 12"
-          ></path>
-        </svg>
-        Info
-      </div>
+      <searchCondition
+        v-if="isStudentList"
+        v-for="(condition, idx) in studentSearchCondition"
+        :key="idx"
+        :onDelete="() => onDelete(idx)"
+        >{{ condition }}</searchCondition
+      >
+      <searchCondition
+        v-if="!isStudentList"
+        v-for="(condition, idx) in scoreSearchCondition"
+        :key="idx"
+        :onDelete="() => onDelete(idx)"
+        >{{ condition }}</searchCondition
+      >
     </section>
 
     <!-- 搜索框 -->
     <div class="col-span-2">
       <label class="input w-3/5 flex items-center mx-auto">
-        <input type="search" class="grow" placeholder="Search" />
+        <input
+          type="search"
+          class="grow"
+          placeholder="Search"
+          v-model="searchString"
+          @keydown.enter="onSearch"
+        />
         <svg
-          class="h-[1em] opacity-50"
+          class="h-[1em] opacity-50 cursor-pointer"
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
+          @click="onSearch"
         >
           <g
             stroke-linejoin="round"
@@ -69,21 +58,61 @@
 </template>
 
 <script setup>
+import { ref, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { useUserStore } from "@/stores/user";
+import { useSearchStore } from "@/stores/search";
 import { storeToRefs } from "pinia";
 
-const userStore = useUserStore();
-const { isStudent } = storeToRefs(userStore);
+import { useToast } from "vue-toastification";
+
+import searchCondition from "@/ui/searchCondition.vue";
+
+const searchStore = useSearchStore();
+const { isStudent } = storeToRefs(searchStore);
 
 const route = useRoute();
 const router = useRouter();
+const store = useSearchStore();
+const { studentSearchCondition, scoreSearchCondition } = storeToRefs(store);
+const toast = useToast();
+
+const isStudentList = computed(() => route.name === "student");
 
 function onClick() {
   if (route.name === "score") {
     router.push({ name: "score-upload" });
   } else {
     router.push({ name: "student-add" });
+  }
+}
+
+const searchString = ref("");
+function onSearch() {
+  if (!searchString.value) {
+    toast.warning("搜索内容不能为空！");
+    return;
+  }
+
+  if (isStudentList.value) {
+    studentSearchCondition.value = [
+      ...studentSearchCondition.value,
+      searchString.value.toLowerCase(),
+    ];
+  } else {
+    scoreSearchCondition.value = [
+      ...scoreSearchCondition.value,
+      searchString.value.toLowerCase(),
+    ];
+  }
+
+  searchString.value = "";
+}
+
+function onDelete(idx) {
+  if (isStudentList.value) {
+    studentSearchCondition.value.splice(idx, 1);
+  } else {
+    scoreSearchCondition.value.splice(idx, 1);
   }
 }
 </script>

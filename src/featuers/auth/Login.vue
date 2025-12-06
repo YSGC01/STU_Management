@@ -10,7 +10,13 @@
     <h1 class="text-center text-3xl">Sunshine</h1>
 
     <label class="label">Email</label>
-    <input type="text" class="input" placeholder="Email" v-model="email" />
+    <input
+      type="text"
+      class="input"
+      placeholder="Email"
+      v-model="email"
+      :disabled="isLogging"
+    />
 
     <label class="label">Password</label>
     <input
@@ -18,6 +24,8 @@
       class="input"
       placeholder="Password"
       v-model="password"
+      :disabled="isLogging"
+      @keydown.enter="onClick"
     />
 
     <label class="label mt-2 justify-between">
@@ -28,10 +36,13 @@
       <button class="btn btn-link btn-sm">Forgot password?</button>
     </label>
 
-    <button class="btn btn-neutral mt-4" @click="onClick">Login</button>
+    <button class="btn btn-neutral mt-4" @click="onClick" :disabled="isLogging">
+      Login
+    </button>
     <button
       class="btn btn-neutral btn-soft mt-4"
       @click="router.push({ name: 'signup' })"
+      :disabled="isLogging"
     >
       Signup
     </button>
@@ -41,34 +52,32 @@
 <script setup>
 import { ref } from "vue";
 
-import Loading from "@/ui/loading.vue";
 import { useToast } from "vue-toastification";
 
 import { signIn } from "@/services/apiAuth";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
-
 const toast = useToast();
 
 const email = ref("");
 const password = ref("");
 
-const isLoading = ref(false);
-async function onClick() {
-  isLoading.value = true;
-  toast.info("Logging in...");
+const isLogging = ref(false);
 
+async function onClick() {
+  // 禁用按钮和输入
+  isLogging.value = true;
+
+  // 开始登录
   const data = await signIn(email.value, password.value);
 
   if (data) {
     router.push("/");
-    toast.clear();
-    toast.success("Logged in successfully!");
+    toast.success("登录成功！");
   } else {
-    toast.clear();
-    toast.error("Login failed. Please check your credentials.");
-    isLoading.value = false;
+    isLogging.value = false;
+    toast.error("登录失败。请检查您的邮箱和密码！");
   }
 }
 </script>

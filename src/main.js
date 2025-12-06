@@ -13,6 +13,7 @@ const app = createApp(App);
 app.use(createPinia());
 app.use(router);
 app.use(Toast, {
+  transition: "Vue-Toastification__slideBlurred",
   position: "top-right",
   timeout: 3000,
 });
