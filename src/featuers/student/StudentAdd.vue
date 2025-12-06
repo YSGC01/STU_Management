@@ -1,19 +1,35 @@
 <template>
   <Loading v-show="isLoading" />
 
-  <fieldset
+  <Form
     class="fieldset bg-base-300 border-base-300 rounded-box w-xs border p-4 mx-auto mt-20 shadow-md"
     v-show="!isLoading"
+    @submit="onSubmit"
+    :validation-schema="validationSchema"
   >
     <legend class="fieldset-legend">Add Student</legend>
 
     <!-- <h1 class="text-center text-3xl">Alex</h1> -->
 
     <label class="label">Email</label>
-    <input type="text" class="input" placeholder="Email" v-model="email" />
+    <Field
+      name="email"
+      type="text"
+      class="input"
+      placeholder="Email"
+      v-model="email"
+    />
+    <ErrorMessage name="email" class="text-red-500" />
 
     <label class="label">Name</label>
-    <input type="text" class="input" placeholder="Someone" v-model="name" />
+    <Field
+      name="name"
+      type="text"
+      class="input"
+      placeholder="Someone"
+      v-model="name"
+    />
+    <ErrorMessage name="name" class="text-red-500" />
 
     <label class="label">Gender</label>
     <select class="select" v-model="gender">
@@ -35,21 +51,24 @@
       </option>
     </select>
 
-    <button class="btn btn-neutral mt-4" @click="onClick">Add Student</button>
-  </fieldset>
+    <button class="btn btn-neutral mt-4">Add Student</button>
+  </Form>
 </template>
 
 <script setup>
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
+import { useToast } from "vue-toastification";
+
+import { Field, Form, ErrorMessage } from "vee-validate";
+import * as yup from "yup";
 
 import Loading from "@/ui/loading.vue";
-import { useToast } from "vue-toastification";
 
 import { addStudent } from "@/services/apiStudent";
 import { getTeacherByTeacherId } from "@/services/apiTeacher";
-import { getConfig } from "@/utils/configHelper";
 import { signUp } from "@/services/apiAuth";
+import { getUserId } from "@/utils/userHelper";
 
 const router = useRouter();
 const toast = useToast();
@@ -61,7 +80,7 @@ const classInfo = ref("Class X| Year X");
 const classInChargeArr = ref([]);
 const teacherId = ref("");
 
-async function onClick() {
+async function onSubmit() {
   toast.info("Adding student...");
 
   const userdata = await signUp(email.value, "123456", { isStudent: true });
@@ -87,15 +106,17 @@ const isLoading = ref(true);
 onMounted(async () => {
   isLoading.value = true;
 
-  const token = getConfig("SUPABASE_TOKEN");
-  const userToken = JSON.parse(localStorage.getItem(token));
-
-  teacherId.value = userToken.user.id;
+  teacherId.value = getUserId();
   const teachers = await getTeacherByTeacherId(teacherId.value);
   classInChargeArr.value = JSON.parse(teachers[0].class_in_charge);
   classInfo.value = classInChargeArr.value[0];
 
   isLoading.value = false;
+});
+
+const validationSchema = yup.object({
+  email: yup.string().required().email(),
+  name: yup.string().required(),
 });
 </script>
 

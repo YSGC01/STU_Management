@@ -1,32 +1,37 @@
 <template>
   <Loading v-show="isLoading" />
 
-  <fieldset
+  <Form
     class="fieldset bg-base-300 border-base-300 rounded-box w-xs border p-4 mx-auto mt-20 shadow-md"
     v-show="!isLoading"
+    @submit="onSubmit"
+    :validation-schema="validationSchema"
   >
     <legend class="fieldset-legend">Login</legend>
 
     <h1 class="text-center text-3xl">Sunshine</h1>
 
     <label class="label">Email</label>
-    <input
+    <Field
+      name="email"
       type="text"
       class="input"
       placeholder="Email"
       v-model="email"
       :disabled="isLogging"
     />
+    <ErrorMessage name="email" class="text-red-500" />
 
     <label class="label">Password</label>
-    <input
+    <Field
+      name="password"
       type="password"
       class="input"
       placeholder="Password"
       v-model="password"
       :disabled="isLogging"
-      @keydown.enter="onClick"
     />
+    <ErrorMessage name="password" class="text-red-500" />
 
     <label class="label mt-2 justify-between">
       <div>
@@ -36,9 +41,7 @@
       <button class="btn btn-link btn-sm">Forgot password?</button>
     </label>
 
-    <button class="btn btn-neutral mt-4" @click="onClick" :disabled="isLogging">
-      Login
-    </button>
+    <button class="btn btn-neutral mt-4" :disabled="isLogging">Login</button>
     <button
       class="btn btn-neutral btn-soft mt-4"
       @click="router.push({ name: 'signup' })"
@@ -46,13 +49,15 @@
     >
       Signup
     </button>
-  </fieldset>
+  </Form>
 </template>
 
 <script setup>
 import { ref } from "vue";
-
 import { useToast } from "vue-toastification";
+
+import { Field, Form, ErrorMessage } from "vee-validate";
+import * as yup from "yup";
 
 import { signIn } from "@/services/apiAuth";
 import { useRouter } from "vue-router";
@@ -63,9 +68,14 @@ const toast = useToast();
 const email = ref("");
 const password = ref("");
 
+const validationSchema = yup.object({
+  email: yup.string().required().email(),
+  password: yup.string().required(),
+});
+
 const isLogging = ref(false);
 
-async function onClick() {
+async function onSubmit() {
   // 禁用按钮和输入
   isLogging.value = true;
 
